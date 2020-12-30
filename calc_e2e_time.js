@@ -33,8 +33,7 @@ async function extractPageContent(page) {
   }
 }
 
-async function extractPage(browser, jobNum) {
-  const page = await browser.newPage();
+async function extractPage(page, jobNum) {
   const url = `https://internal.pingcap.net/idc-jenkins/blue/organizations/jenkins/tidb-operator-pull-e2e-kind/detail/tidb-operator-pull-e2e-kind/${jobNum}/tests/`
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   try {
@@ -98,10 +97,11 @@ async function extractPage(browser, jobNum) {
 
 (async () => {
   const browser = await puppeteer.launch();
+  const page = await browser.newPage();
 
-  for (let jobNum = 3600; jobNum < 3610; jobNum++) {
+  for (let jobNum = 1; jobNum < 3650; jobNum++) {
     console.log(`start extracting job ${jobNum}`)
-    await extractPage(browser, jobNum)
+    await extractPage(page, jobNum)
     console.log(`finish extracting job ${jobNum}`)
   }
 
