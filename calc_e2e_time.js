@@ -1,6 +1,8 @@
 const fs = require('fs');
 const puppeteer = require('puppeteer');
 
+const DATA_DIR = 'e2e_time_data'
+
 async function extractPageContent(page) {
   const startTime = await page.evaluate(() => {
     let timeElems = document.querySelectorAll('.RunDetailsHeader-times div')
@@ -31,10 +33,16 @@ async function extractPageContent(page) {
   }
 }
 
-async function extractPage(browser, url) {
+async function extractPage(browser, jobNum) {
   const page = await browser.newPage();
+  const url = `https://internal.pingcap.net/idc-jenkins/blue/organizations/jenkins/tidb-operator-pull-e2e-kind/detail/tidb-operator-pull-e2e-kind/${jobNum}/tests/`
   await page.goto(url, { waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('.result-item', { timeout: 10000 })
+  try {
+    await page.waitForSelector('.result-item', { timeout: 10000 })
+  } catch {
+    console.log('wait for .result-item element in page timeout, skip')
+    return
+  }
   // setup global helper functions in page js context, which is not in this nodejs context
   await page.evaluate(() => {
     window.extractTest = (elem) => {
@@ -53,21 +61,21 @@ async function extractPage(browser, url) {
       len = hms.length
       // hms.forEach(i => console.log(i))
       if (len > 0) {
-        s = hms[len-1]
+        s = hms[len - 1]
         if (!s.endsWith('s')) {
           return -1
         }
         sec += parseInt(s)
       }
       if (len > 1) {
-        m = hms[len-2]
+        m = hms[len - 2]
         if (!m.endsWith('m')) {
           return -2
         }
         sec += parseInt(m) * 60
       }
       if (len > 2) {
-        h = hms[len-3]
+        h = hms[len - 3]
         if (!h.endsWith('h')) {
           return -3
         }
@@ -79,21 +87,23 @@ async function extractPage(browser, url) {
       return sec
     }
   });
-  
+
   console.log(url);
   page.on('console', msg => {
     console.log(msg.text())
   });
-  // await extractPageContent(page)
-  console.log(await extractPageContent(page))
+  let pageContent = await extractPageContent(page)
+  await fs.writeFileSync(`${DATA_DIR}/${jobNum}.json`, JSON.stringify(pageContent, null, 2))
 }
 
 (async () => {
   const browser = await puppeteer.launch();
 
-  const jobNum = 3600
-  let url = `https://internal.pingcap.net/idc-jenkins/blue/organizations/jenkins/tidb-operator-pull-e2e-kind/detail/tidb-operator-pull-e2e-kind/${jobNum}/tests/`
-  await extractPage(browser, url)
+  for (let jobNum = 3600; jobNum < 3610; jobNum++) {
+    console.log(`start extracting job ${jobNum}`)
+    await extractPage(browser, jobNum)
+    console.log(`finish extracting job ${jobNum}`)
+  }
 
   await browser.close();
 })();
