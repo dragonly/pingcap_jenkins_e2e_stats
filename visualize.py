@@ -3,23 +3,13 @@
 import glob
 import json
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-data_dir = 'jenkins_api_data'
+from calc_stats import read_all_tests
+from calc_stats import read_all_test_case_names
 
-def collect_all_tests():
-    all_list = []
-    for filename in glob.glob('{data_dir}/*.json'.format(data_dir=data_dir)):
-        with open(filename, 'rt') as fp:
-            tests = json.load(fp)
-            all_list.extend(tests)
-    with open('{data_dir}/all_tests.json'.format(data_dir=data_dir), 'wt') as fp:
-        json.dump(all_list, fp, ensure_ascii=False, indent=1)
-
-def read_all_tests():
-    with open('{data_dir}/all_tests.json'.format(data_dir=data_dir), 'rt') as fp:
-        return json.load(fp)
 
 def draw_hist(all_tests, name):
     passed = 0
@@ -35,15 +25,50 @@ def draw_hist(all_tests, name):
         elif test['status'] == 'FAILED':
             failed += 1
             failed_time.append(test['duration'])
-    passed_time_series = pd.Series(np.array(passed_time))
-    failed_time_series = pd.Series(np.array(failed_time))
-    passed_time_series.plot.hist(grid=True, bins=20, rwidth=0.9, color='#607c8e')
-    plt.title('Commute Times for 1,000 Commuters')
-    plt.xlabel('Counts')
-    plt.ylabel('Commute Time')
+    passed_time_series = pd.Series(passed_time, dtype='float32')
+    failed_time_series = pd.Series(failed_time, dtype='float32')
+    passed_vs_failed = pd.Series([passed, failed], index=['PASSED', "FAILED"])
+    # print('===')
+    # print(passed_time)
+    # print(failed_time)
+    # print(passed_vs_failed)
+    # return
+
+    fig = plt.figure()
+    fig.suptitle(name)
+    plt.subplot(1, 3, 1)
+    passed_time_series.plot.hist(
+        grid=True, bins=10, rwidth=0.9, color='#2ecc71')
+    # plt.title(name)
+    plt.xlabel('seconds')
+    plt.ylabel('counts')
     plt.grid(axis='y', alpha=0.75)
+
+    plt.subplot(1, 3, 2)
+    failed_time_series.plot.hist(
+        grid=True, bins=10, rwidth=0.9, color='#e74c3c')
+    plt.xlabel('seconds')
+    plt.ylabel('counts')
+    plt.grid(axis='y', alpha=0.75)
+
+    plt.subplot(1, 3, 3)
+    passed_vs_failed.plot.bar(grid=True)
+    plt.ylabel('counts')
+    plt.xticks(rotation=0, horizontalalignment="center")
+    plt.grid(axis='y', alpha=0.75)
+
+    print('draw {name} figure'.format(name=name))
+    # plt.show()
+    plt.savefig('figures/{name}.png'.format(name=name.replace(' – tidb-operator e2e suite', '')))
+    plt.close()
+
 
 if __name__ == '__main__':
     # collect_all_tests()
     all_tests = read_all_tests()
-    draw_hist(all_tests, 'Up – tidb-operator')
+    test_cases = read_all_test_case_names()
+    # test_cases = [
+    #     '[tidb-operator][Stability] [Feature: AdvancedStatefulSet][Feature: AutoFailover] operator with advanced statefulset and short auto-failover periods delete the failed pod via delete-slots feature of Advanced Statefulset after failover – tidb-operator e2e suite'
+    # ]
+    for test_case in test_cases:
+        draw_hist(all_tests, test_case)

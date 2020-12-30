@@ -1,3 +1,8 @@
-node_modules
-e2e_time_data
-jenkins_api_data
+node_modules/
+__pycache__/
+.DS_Store
+
+e2e_time_data/
+jenkins_api_data/
+figures/
+generated_data/
