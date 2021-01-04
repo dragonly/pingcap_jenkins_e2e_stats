@@ -7,7 +7,7 @@ jenkins_data_dir = 'data/jenkins_api_data'
 generated_data_dir = 'data/generated_data'
 
 
-def collect_all_tests():
+def gen_all_tests():
     all_list = []
     for filename in glob.glob('{data_dir}/*.json'.format(data_dir=jenkins_data_dir)):
         with open(filename, 'rt') as fp:
@@ -34,8 +34,8 @@ def read_all_test_case_names():
         return json.load(fp)
 
 if __name__ == '__main__':
-    collect_all_tests()
-    all_tests=read_all_tests()
-    all_names=gen_all_test_case_names(all_tests)
-    with open('{data_dir}/all_test_case_names.json'.format(data_dir=generated_data_dir), 'wt') as fp:
-        json.dump(all_names, fp, ensure_ascii=False, indent=1)
+    gen_all_tests()
+    # all_tests=read_all_tests()
+    # all_names=gen_all_test_case_names(all_tests)
+    # with open('{data_dir}/all_test_case_names.json'.format(data_dir=generated_data_dir), 'wt') as fp:
+    #     json.dump(all_names, fp, ensure_ascii=False, indent=1)
