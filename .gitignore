@@ -2,7 +2,6 @@ node_modules/
 __pycache__/
 .DS_Store
 
+data/
 e2e_time_data/
-jenkins_api_data/
 figures/
-generated_data/

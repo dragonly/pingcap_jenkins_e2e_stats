@@ -3,8 +3,8 @@
 import glob
 import json
 
-jenkins_data_dir = 'jenkins_api_data'
-generated_data_dir = 'generated_data'
+jenkins_data_dir = 'data/jenkins_api_data'
+generated_data_dir = 'data/generated_data'
 
 
 def collect_all_tests():
